@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "Copy this file to settings.local.json for PERSONAL overrides. settings.local.json is git-ignored and never shared. Anything here overrides the shared .claude/settings.json for you only.",
+
+  "_example_model_override": "Override the team default model if you don't have Opus 1M access:",
+  "model": "sonnet",
+
+  "_example_permission_toggles": "These are the permission-bypassing toggles from Rafayel's personal setup. They reduce prompts but weaken guardrails — opt in only if you understand them:",
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true
+}

@@ -1,0 +1,36 @@
+# LOCAL DEVELOPMENT ONLY.
+#
+# Real environments are provisioned by the DB team from the Phase 9 handover
+# package (dossier 0.26). This file is the executable rehearsal of that package
+# — never the production path.
+#
+# Every secret is required from the environment via ${VAR:?}: compose refuses to
+# start rather than falling back to a default credential.
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: papi-authority-mysql
+    restart: unless-stopped
+    command:
+      - --require-secure-transport=OFF # local only; DB_SSL=1 is enforced in prod-like envs
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-papi_authority}
+      PAPI_MIGRATOR_PASSWORD: ${PAPI_MIGRATOR_PASSWORD:?PAPI_MIGRATOR_PASSWORD must be set}
+      PAPI_AUTHORITY_PASSWORD: ${PAPI_AUTHORITY_PASSWORD:?PAPI_AUTHORITY_PASSWORD must be set}
+      PAPI_CONSOLE_PASSWORD: ${PAPI_CONSOLE_PASSWORD:?PAPI_CONSOLE_PASSWORD must be set}
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    volumes:
+      - papi-authority-db:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-p$$MYSQL_ROOT_PASSWORD']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  papi-authority-db:

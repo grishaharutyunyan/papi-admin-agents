@@ -1,0 +1,66 @@
+{
+  "compilerOptions": {
+    /* Language & emit ------------------------------------------------------
+     * ES2023 + node16 module resolution. NOT `baseUrl` + `moduleResolution: node`
+     * (papi-back's form) — both are deprecated in TS 6 and stop functioning in
+     * TS 7. See dossier decision 0.16.
+     */
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "node16",
+    "moduleResolution": "node16",
+
+    /* Explicit: TS 6 does not auto-include @types/node here, and `process`
+     * must be typed for the configs module. Keeping this list explicit also
+     * means an unexpected global type package cannot silently widen the
+     * ambient surface.
+     */
+    "types": ["node"],
+
+    /* Decorators — required by NestJS DI and TypeORM entity reflection. */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Output. `rootDir` + `include` are explicit so the build emits
+     * `dist/main.js` and not `dist/src/main.js`. papi-back omits both, which is
+     * why its `start:prod` and Docker CMD are broken. See dossier D.3b.
+     */
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": false,
+    "removeComments": true,
+    "sourceMap": true,
+
+    /* `incremental` is deliberately OFF. Combined with nest-cli's
+     * `deleteOutDir`, a stale .tsbuildinfo makes tsc believe unchanged files
+     * are already emitted while dist has just been wiped — producing a
+     * silently PARTIAL build (verified: a rebuild emitted only the single
+     * changed file). Correctness over a marginal speed win. papi-back enables
+     * `incremental` and carries the same latent hazard.
+     */
+    "incremental": false,
+
+    /* Path alias `$/` -> `src/`. Declared via `paths` alone; `baseUrl` is
+     * deliberately absent so bare `src/...` imports cannot resolve.
+     */
+    "paths": {
+      "$/*": ["./src/*"]
+    },
+
+    /* Type safety. Full strict mode — this is an identity/authorization
+     * service, and null-safety bugs live precisely in token and permission
+     * paths. papi-back disables strictNullChecks and noImplicitAny; we do not.
+     */
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+
+# Never commit real configuration.
+.env
+.env.*
+!.env.example
+
+*.tsbuildinfo
+*.log
+npm-debug.log*
+
+# Key material must never reach the repository.
+*.pem
+*.key
+*.p8
+*.pfx
+
+.DS_Store
+.idea/
+.vscode/

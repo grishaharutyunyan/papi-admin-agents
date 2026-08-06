@@ -1,0 +1,11 @@
+{
+  "tables": 24,
+  "foreignKeys": 24,
+  "indexes": 61,
+  "catalogRows": 41,
+  "migrations": [
+    "InitialIdentitySchema1785934632863",
+    "AuthRuntimeSchema1785934941243",
+    "SyncPermissionCatalog1786014020134"
+  ]
+}

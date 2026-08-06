@@ -1,0 +1,32 @@
+# === Personal / machine-local Claude config (never share) ===
+.claude/settings.local.json
+.claude/settings.local.json.bak
+
+# Claude Code runtime & session data (secrets, history, caches)
+.claude/*.jsonl
+.claude/history.jsonl
+.claude/sessions/
+.claude/session-env/
+.claude/projects/
+.claude/shell-snapshots/
+.claude/file-history/
+.claude/backups/
+.claude/cache/
+.claude/paste-cache/
+.claude/downloads/
+.claude/debug/
+.claude/ide/
+.claude/tasks/
+.claude/security/
+.claude/stats-cache.json
+.claude/*-cache.json
+.claude/.last*
+
+# Plugin caches (plugins auto-install from the marketplace on clone — don't commit them)
+.claude/plugins/
+
+# === OS / editor junk ===
+.DS_Store
+.idea/
+*.iml
+.vscode/
