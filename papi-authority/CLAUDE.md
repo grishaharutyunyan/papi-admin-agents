@@ -66,6 +66,14 @@ Local setup: `cp .env.example .env` → fill it → `docker compose up -d` → `
   `src/typeorm-cli-data-source.ts`.
 - **`incremental` stays off.** With nest-cli's `deleteOutDir`, a stale `.tsbuildinfo` produces a
   silently partial build.
+- **`useDefineForClassFields: false` is pinned — do not delete it, do not "let it default"**
+  (dossier 0.60). At `target: ES2022`+ it defaults to `true`, and then a PATCH DTO
+  (`class UpdateUserDto { name?: string; email?: string }`) carrying only `name` arrives with
+  `email` as an own `undefined` key — so `Object.assign(entity, dto)` **wipes the `email` column**.
+  Verified both ways against this project's `class-transformer` and `typeorm`.
+- **Language level is `ES2024` + `module: node20`** (dossier 0.59), matching the `node >= 24.11.0`
+  floor. `moduleResolution` stays **`node16`** — the resolution algorithm is unchanged and TS 6
+  rejects any other pairing with `TS5109`.
 - **No logger yet.** The company-standard logging package is supplied at the final step (dossier
   0.15). Until then `no-console` is an error, and **nothing sensitive may be written to output at
   all** — no token material, password hashes, key material, or auth-path request bodies.

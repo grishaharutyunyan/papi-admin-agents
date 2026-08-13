@@ -1,7 +1,7 @@
 {
   "name": "papi-authority",
   "version": "0.1.0",
-  "description": "NRG platform \u2014 central identity and authorization authority. The only service that holds a signing key and issues tokens.",
+  "description": "NRG platform central identity and authorization authority. The only service that holds a signing key and issues tokens.",
   "private": true,
   "license": "UNLICENSED",
   "engines": {

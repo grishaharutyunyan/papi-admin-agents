@@ -1,25 +1,47 @@
 {
   "compilerOptions": {
     /* Language & emit ------------------------------------------------------
-     * ES2023 + node16 module resolution. NOT `baseUrl` + `moduleResolution: node`
-     * (papi-back's form) — both are deprecated in TS 6 and stop functioning in
-     * TS 7. See dossier decision 0.16.
+     * ES2024 + node20 module semantics, matching the `engines.node >= 24.11.0`
+     * floor. NOT `baseUrl` + `moduleResolution: node` (papi-back's form) —
+     * TS 6.0.3 rejects both outright (TS5101 / TS5107) and TS 7 removes them.
+     * See dossier decisions 0.16 and 0.59.
+     *
+     * `module: node20` models a Node that can `require()` an ESM-only package;
+     * `node16` does not, and would fail to type-check the first ESM-only
+     * dependency we add even though it works at runtime. `moduleResolution`
+     * stays `node16` because the resolution ALGORITHM is unchanged — TS 6
+     * enforces exactly this pairing (TS5109).
      */
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "node16",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "node20",
     "moduleResolution": "node16",
 
-    /* Explicit: TS 6 does not auto-include @types/node here, and `process`
-     * must be typed for the configs module. Keeping this list explicit also
-     * means an unexpected global type package cannot silently widen the
-     * ambient surface.
+    /* TS 6 does auto-include every installed `@types/*` package. Pinning the
+     * list is the point: an unexpected global type package cannot silently
+     * widen the ambient surface, so a stray dependency can never make an
+     * undeclared global type-check.
      */
     "types": ["node"],
 
-    /* Decorators — required by NestJS DI and TypeORM entity reflection. */
+    /* Decorators — required by NestJS DI and TypeORM entity reflection. Still
+     * fully supported and NOT deprecated in TS 6.0.3; Nest 11 needs the
+     * legacy form, not the ES standard decorators.
+     */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+
+    /* Pinned OFF, and NOT a style preference. At `target: ES2022` and above
+     * this defaults to TRUE, which gives class fields ECMAScript `define`
+     * semantics: every declared-but-unassigned field becomes an own property
+     * set to `undefined` at construction. Verified consequence — a PATCH DTO
+     * `class UpdateUserDto { name?: string; email?: string }` fed only
+     * `{ name }` yields own keys `["name","email"]`, so `Object.assign(entity,
+     * dto)` WIPES the untouched `email` column. With `false` the same DTO
+     * yields `["name"]` and the column survives. Partial-update data loss in
+     * an identity service is not an acceptable default. See dossier 0.60.
+     */
+    "useDefineForClassFields": false,
 
     /* Output. `rootDir` + `include` are explicit so the build emits
      * `dist/main.js` and not `dist/src/main.js`. papi-back omits both, which is
