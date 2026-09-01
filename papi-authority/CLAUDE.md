@@ -16,7 +16,7 @@ the opposite of what this service is (dossier 0.21).
 
 ## The reference monorepo is READ-ONLY
 
-`/Users/rafayelmovsesyan/Desktop/nrg/platform-admin` is a knowledge base, never a target. Study it,
+The reference monorepo (path is developer-specific — see `.claude.local.md` at the repo root) is a knowledge base, never a target. Study it,
 port vetted pieces from it after security review, **never modify it** (dossier 0.3).
 
 **papi-back is the pattern source, not the security ceiling.** It has verified defects — spoofable

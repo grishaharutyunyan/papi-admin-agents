@@ -12,6 +12,7 @@ import {
 
 import type { RequestContext } from '$/api/auth/services/auth.service';
 import { ChangeMyPasswordDto, UpdateMeDto } from '$/api/users/dto/me.dto';
+import type { MeProjectView } from '$/api/users/services/me.service';
 import { MeService } from '$/api/users/services/me.service';
 import { AuthThrottle, SkipPermissions } from '$/decorators/public.decorator';
 import type { AuthenticatedRequest } from '$/guards/jwt.guard';
@@ -46,6 +47,17 @@ export class MeController {
   @SkipPermissions()
   updateMe(@Body() dto: UpdateMeDto, @Req() request: AuthenticatedRequest) {
     return this.me.updateMe(subjectOf(request), dto, contextOf(request));
+  }
+
+  /**
+   * The caller's own project memberships, for a project switcher (dossier
+   * 0.62). Same self-resource reasoning as every other route on this
+   * controller: the target is always the token's own `sub`.
+   */
+  @Get('projects')
+  @SkipPermissions()
+  findMyProjects(@Req() request: AuthenticatedRequest): Promise<MeProjectView[]> {
+    return this.me.findMyProjects(subjectOf(request));
   }
 
   /**

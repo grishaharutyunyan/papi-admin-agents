@@ -9,7 +9,12 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-const PANEL_KEY = /^[A-Z0-9_]+$/;
+/**
+ * Shared with `app-init.dto.ts` (code review, 2026-08-31 — was copy-pasted
+ * there, risking the two validators silently drifting apart if this rule
+ * ever changes).
+ */
+export const PANEL_KEY = /^[A-Z0-9_]+$/;
 
 export class CreateAdminPanelDto {
   @IsString()

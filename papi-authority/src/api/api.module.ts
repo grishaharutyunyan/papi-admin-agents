@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AdminPanelsModule } from '$/api/admin-panels/admin-panels.module';
+import { AppInitModule } from '$/api/app-init/app-init.module';
 import { AuthModule } from '$/api/auth/auth.module';
 import { AuthorizationModule } from '$/api/authorization/authorization.module';
 import { InvitationsModule } from '$/api/invitations/invitations.module';
@@ -24,6 +25,7 @@ import { UsersModule } from '$/api/users/users.module';
     UsersModule,
     ProjectsModule,
     AdminPanelsModule,
+    AppInitModule,
     AuthorizationModule,
     PlatformSettingsModule,
     InvitationsModule,

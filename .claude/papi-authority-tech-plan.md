@@ -2,9 +2,9 @@
 
 > **For agentic workers:** this is the phase-level execution plan. Work happens **one phase at a time**: at each phase kickoff, produce the phase's detailed design + bite-sized task breakdown (per `superpowers:writing-plans` — exact files, code, tests), present it to the user, **get approval, then implement**. Do not start a phase's implementation without approval (Dossier Part 0.7).
 >
-> **Companion dossier (the "why" and every current-state fact):** `papi2/.claude/papi-authority-plan.md` — read it in full before Phase 1. Its Part 0 holds the freshest locked decisions; its Part O maps the read-only reference monorepo at `/Users/rafayelmovsesyan/Desktop/nrg/platform-admin`.
+> **Companion dossier (the "why" and every current-state fact):** `.claude/papi-authority-plan.md` (repo root) — read it in full before Phase 1. Its Part 0 holds the freshest locked decisions; its Part O maps the read-only reference monorepo (path is developer-specific — see `.claude.local.md`).
 
-**Goal:** Build `papi-authority` — the platform's single identity + authorization authority and only token issuer — from scratch, at `/Users/rafayelmovsesyan/Desktop/papi2/papi-authority/`.
+**Goal:** Build `papi-authority` — the platform's single identity + authorization authority and only token issuer — from scratch, at `papi-authority/` (repo root of `papi-admin-agents`, wherever each developer has it checked out).
 
 **Architecture:** One hardened NestJS service owning one MySQL DB split into identity tables and auth-runtime tables (two least-privilege DB users). It authenticates (password/2FA/lockout/SSO per admin panel's DB-configured auth modes), computes a 4-layer effective permission map per project, bakes it into short-lived RS256 access tokens verified by consumers against its JWKS, rotates refresh tokens with family reuse-detection, handles invite-only onboarding with a standalone join page, and audits every auth action with geo-IP + device data.
 
@@ -45,6 +45,14 @@
 
 **Gate re-run 2026-08-11 (all green, on the committed tree):** `typecheck` clean · `lint` clean at `--max-warnings 0` · `build` clean · `test` 10/10 pass · `permissions:check` "catalog and database agree (41 permissions)" · `migration:show` all 3 applied · boot smoke: 60 routes mapped, `/live` 200, `/ready` 200, JWKS serves the RSA key with `kid`, `/api/users` 401 unauthenticated, CSP/HSTS/nosniff/frame-options present, no `x-powered-by`, `x-request-id` echoed, clean shutdown. **Still build-time smoke checks, not the Part M pass.**
 
+**Post-completion gap 2026-08-30 — two panel-facing read endpoints were missing (decisions 0.61 / 0.62), found while planning `papi-init-back`.**
+- `GET /api/app-init?panelKey=<key>` — public, unauthenticated — a login page's only way to know whether to show password/SSO fields and which Azure tenant/client to use. **IMPLEMENTED 2026-08-30**, as a side effect of `papi-init-back` Phase 1 (its own app-init proxy was blocked on this): `src/api/app-init/` (`AppInitController`, `AppInitService`, `AppInitQueryDto`), reading the AUTHORITY connection like `SsoConfigModule`. Returns `{basicAuthEnabled, ssoAuthEnabled, ssoTenantId, ssoClientId}` for an active panel; 404 (no detail beyond "not found") for an inactive/unknown `panelKey`. Registered in `api.module.ts`. `typecheck`/`lint`/`build` clean (0.61).
+- `GET /api/users/me/projects` — self-scoped, authenticated — the caller's own projects with display fields (`id, project, name, theme, logoUrl`) for a project switcher. The token's `projects` claim intentionally carries no display data (only `{pages, apis}`), and `GET /projects` is platform-admin-only and returns everyone's projects (0.62). **IMPLEMENTED 2026-08-30**, as a side effect of `papi-init-back` Phase 5 (its own project-switcher proxy was blocked on this): added to the existing `MeController`/`MeService` (`src/api/users/{controllers/me.controller.ts,services/me.service.ts}`) rather than a new module — `@SkipPermissions()`, same self-resource pattern (target always `tokenClaims.sub`). `MeService.findMyProjects` loads `UserEntity` with the `projects` relation and projects to a new `MeProjectView` (`{id, project, name, theme, logoUrl}`, no admin-only columns). Soft-deleted projects excluded by TypeORM's own join-time `deletedAt IS NULL` behavior (verified against the pinned `typeorm@1.1.0` source, not assumed — no second hand-written filter added). `typecheck`/`lint`/`build`/`test` clean.
+
+0.62 is closed. No further papi-authority work is needed for `papi-init-back` Phase 5.
+
+**Post-completion gap 2026-08-30 (decision 0.63) — no exception filter exists despite being documented as a "deliberate divergence."** `main.ts` never registers `app.useGlobalFilters(...)`; there is no `ExceptionFilter` anywhere in `src/`. NestJS's default handling means any `HttpException` (4xx) returns `exception.getResponse()` **verbatim** to the caller — safe today only because no current handler happens to construct one from a caught error's raw message, not because anything prevents it. Fix design lives in `papi-init-back-module-inventory.md` Part S (shared across both services); retrofitting it here is recommended given papi-authority is the most exposed service on the platform, but is not yet scheduled as its own phase.
+
 **Post-completion change 2026-08-11 — `tsconfig.json` audit (decisions 0.59 / 0.60).** Re-audited against the installed toolchain (`typescript@6.0.3`, Node v24.19.0). Applied: `target`/`lib` `ES2023 → ES2024`; `module` `node16 → node20` (`moduleResolution` stays `node16` — TS 6 enforces that pairing via `TS5109`); the `types: ["node"]` comment corrected (TS 6 **does** auto-include `@types/*` — the option is kept for ambient-surface control, not necessity); **`useDefineForClassFields: false` pinned explicitly**, which was silently `true` and probe-verified to make `Object.assign(entity, patchDto)` wipe untouched columns. Re-verified unchanged: no `baseUrl` (`TS5101`), `moduleResolution: node`/`node10`/`classic` deprecated (`TS5107`), decorator flags not deprecated in TS 6. Gates after the change: `typecheck` 0 · `build` 0 (emit still `dist/main.js`, not `dist/src/`) · `lint` 0 at `--max-warnings 0`. **Not committed.**
 
 **Runtime facts a fresh session needs:**
@@ -70,7 +78,7 @@
 ## Global Constraints (apply to every phase)
 
 - **From scratch** — no bulk-copying modules from platform-admin. Individual guards/middleware/helpers MAY be ported only after verifying each is 100% secure + current best practice (Dossier Part 0.3).
-- **platform-admin (`/Users/rafayelmovsesyan/Desktop/nrg/platform-admin`) is read-only** — never modify anything there.
+- **platform-admin (the reference monorepo — path is developer-specific, see `.claude.local.md`) is read-only** — never modify anything there.
 - **MySQL**, TypeORM **migrations only** — `synchronize` is forbidden in all environments.
 - **UUIDv7** PKs for all identity data; storage format (`BINARY(16)` vs `CHAR(36)`) decided at Phase 2 kickoff.
 - **Default-deny** authorization everywhere (papi-back's default-deny, not rmp's accidental default-allow).
@@ -92,7 +100,7 @@
 
 ## Phase 1 — Scaffold, config module, two-DB-user setup
 
-**Objective:** A booting, empty-but-hardened NestJS service at `papi2/papi-authority/` with validated fail-fast config and local MySQL infrastructure.
+**Objective:** A booting, empty-but-hardened NestJS service at `papi-authority/` (repo root) with validated fail-fast config and local MySQL infrastructure.
 
 **Deliverables:**
 - `papi-authority/` scaffolded fresh (latest Nest CLI; versions pinned via **context7** at kickoff): `src/main.ts`, `src/app.module.ts`, `src/api/api.module.ts` (empty), `tsconfig` with `$/` alias, ESLint/Prettier per skeleton conventions.
@@ -130,7 +138,7 @@
 - **PHC parameter order is not fixed.** The argon2 reference (and this service) emit `m,t,p`; the `argon2` npm package emits `m,p,t`. A positional regex silently fails to verify perfectly valid hashes from other tools — parse the parameter segment as unordered `key=value` pairs. Caught only because output was cross-verified against an independent implementation.
 - **TypeORM `insert()` rejects a plain object for a JSON column** (`QueryDeepPartialEntity` typing); use `save()` with `create()` for entities carrying JSON.
 - **The throttler fires before account lockout**, so a lockout test will see 429s rather than 401s unless the rate limit is raised for the test. Both defences are wanted — the throttler is IP-scoped, lockout is account-scoped — but they mask each other in verification.
-- **Husky lives at the repo root**, not in the service — `.git` is at `papi2/`, so `prepare: husky` inside `papi-authority/` fails with "`.git` can't be found". Hooks are a repo-root concern; the service keeps only its `lint-staged` config.
+- **Husky lives at the repo root**, not in the service — `.git` is at the repo root (`papi-admin-agents/`), so `prepare: husky` inside `papi-authority/` fails with "`.git` can't be found". Hooks are a repo-root concern; the service keeps only its `lint-staged` config.
 
 **Deliberate divergences from papi-back** (Dossier D.7 has the evidence; every one of these must be restated in `papi-authority/CLAUDE.md` with its reason, so no future agent "fixes" us back to the weaker baseline):
 

@@ -27,6 +27,20 @@ export interface MeView {
 }
 
 /**
+ * The narrow, self-scoped project-switcher shape (dossier 0.62). Deliberately
+ * NOT `ProjectEntity` and NOT the admin-facing `GET /projects` shape — no
+ * limits, operators, blockers or any other admin-only column, and no project
+ * the caller doesn't belong to.
+ */
+export interface MeProjectView {
+  id: string;
+  project: string;
+  name: string;
+  theme: string;
+  logoUrl: string | null;
+}
+
+/**
  * Self-service, on the AUTHORITY connection (dossier 0.45).
  *
  * The admin panels do not write identity tables themselves: rmp and the rest
@@ -67,6 +81,46 @@ export class MeService {
       roleId: user.roleId,
       roleName: user.role?.name ?? null,
     };
+  }
+
+  /**
+   * The caller's own project memberships, projected to display fields only
+   * (dossier 0.62) — what a project switcher renders. This is NOT permission
+   * data: which project is actually usable still comes from checking
+   * `x-project-id` against the access token's `projects` claim, never from a
+   * project appearing in this list.
+   *
+   * Soft-deleted projects are excluded. Verified, not assumed: TypeORM's
+   * `join()` (what `relations: {...}` compiles to internally, see
+   * `node_modules/typeorm/query-builder/SelectQueryBuilder.js`) appends
+   * `<alias>.deletedAt IS NULL` to any joined entity that carries a
+   * `@DeleteDateColumn`, unless `.withDeleted()` is explicitly called — which
+   * it is not, here. No extra filtering is added for that reason; adding a
+   * second, hand-written filter alongside a mechanism already proven to apply
+   * would just be two places that could drift out of sync.
+   *
+   * `isActive: false` projects ARE filtered here explicitly (code review,
+   * 2026-08-31) — unlike soft-delete, TypeORM has no automatic mechanism for
+   * this one, so a deactivated-but-not-deleted project (an admin's normal way
+   * to retire a project without erasing its history) would otherwise still
+   * appear in the switcher.
+   */
+  async findMyProjects(userId: string): Promise<MeProjectView[]> {
+    const user = await this.users.findOne({
+      where: { id: userId },
+      relations: { projects: true },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+
+    return user.projects
+      .filter((project) => project.isActive)
+      .map((project) => ({
+        id: project.id,
+        project: project.project,
+        name: project.name,
+        theme: project.theme,
+        logoUrl: project.logoUrl,
+      }));
   }
 
   /**

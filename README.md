@@ -1,3 +1,5 @@
+<img src="https://nrgaming.com/img/logo_big.svg" width="120">
+
 # Team Claude Config
 
 Shared, version-controlled **Claude Code** configuration for our team. Clone this repo,

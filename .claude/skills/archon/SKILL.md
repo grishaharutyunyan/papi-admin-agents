@@ -18,9 +18,10 @@ We are building the **new version of the platform-admin system** in this repo (`
 
 ## Knowledge base — read before acting
 
-- `papi2/.claude/papi-authority-tech-plan.md` — the phased execution plan (what to do next).
-- `papi2/.claude/papi-authority-plan.md` — the full dossier: every locked decision (Part 0 + Part B), current-state facts, target design, verification (Part M), and **Part O = knowledge map of the old platform**.
-- `/Users/rafayelmovsesyan/Desktop/nrg/platform-admin/` — the OLD platform (8 NestJS backends + 8 React frontends). **STRICTLY READ-ONLY**: study it, port vetted patterns from it, never modify it. `papi-back/CLAUDE.md` there holds the skeleton conventions we carry forward.
+- `.claude/papi-authority-tech-plan.md` (repo root) — the phased execution plan (what to do next).
+- `.claude/papi-authority-plan.md` (repo root) — the full dossier: every locked decision (Part 0 + Part B), current-state facts, target design, verification (Part M), and **Part O = knowledge map of the old platform**.
+- `.claude/papi-init-back-plan.md` / `.claude/papi-init-back-tech-plan.md` / `.claude/papi-init-back-module-inventory.md` (repo root) — the papi-init-back build (roadmap item 3, approved ahead of access-control).
+- **The OLD platform** (8 NestJS backends + 8 React frontends) — **path is developer-specific**, see `.claude.local.md` at the repo root (gitignored; ask the user and record it there if it doesn't exist yet). **STRICTLY READ-ONLY**: study it, port vetted patterns from it, never modify it. `papi-back/CLAUDE.md` there holds the skeleton conventions we carry forward.
 
 ## Non-negotiables
 

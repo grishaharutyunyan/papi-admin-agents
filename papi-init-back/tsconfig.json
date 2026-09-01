@@ -1,0 +1,83 @@
+{
+  "compilerOptions": {
+    /* Language & emit ------------------------------------------------------
+     * Copied verbatim from papi-authority's tsconfig (dossier 0.59/0.60 — these
+     * are TS-6/Node-24 platform facts, not papi-authority-specific).
+     *
+     * ES2024 + node20 module semantics, matching the `engines.node >= 24.11.0`
+     * floor. NOT `baseUrl` + `moduleResolution: node` (old papi-back's form) —
+     * TS 6.0.3 rejects both outright (TS5101 / TS5107) and TS 7 removes them.
+     *
+     * `module: node20` models a Node that can `require()` an ESM-only package;
+     * `node16` does not, and would fail to type-check the first ESM-only
+     * dependency we add even though it works at runtime. `moduleResolution`
+     * stays `node16` because the resolution ALGORITHM is unchanged — TS 6
+     * enforces exactly this pairing (TS5109).
+     */
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "node20",
+    "moduleResolution": "node16",
+
+    /* TS 6 auto-includes every installed `@types/*` package. Pinning the list
+     * is the point: an unexpected global type package cannot silently widen
+     * the ambient surface, so a stray dependency can never make an undeclared
+     * global type-check.
+     */
+    "types": ["node"],
+
+    /* Decorators — required by NestJS DI. Still fully supported and NOT
+     * deprecated in TS 6.0.3; Nest 11 needs the legacy form, not the ES
+     * standard decorators.
+     */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Pinned OFF, and NOT a style preference. At `target: ES2022` and above
+     * this defaults to TRUE, which gives class fields ECMAScript `define`
+     * semantics: every declared-but-unassigned field becomes an own property
+     * set to `undefined` at construction. Verified consequence (papi-authority
+     * dossier 0.60) — a PATCH DTO `class UpdateXDto { name?: string; email?:
+     * string }` fed only `{ name }` yields own keys `["name","email"]`, so
+     * `Object.assign(entity, dto)` WIPES the untouched `email` field. With
+     * `false` the same DTO yields `["name"]` and the field survives.
+     */
+    "useDefineForClassFields": false,
+
+    /* Output. `rootDir` + `include` are explicit so the build emits
+     * `dist/main.js` and not `dist/src/main.js`.
+     */
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": false,
+    "removeComments": true,
+    "sourceMap": true,
+
+    /* `incremental` is deliberately OFF. Combined with nest-cli's
+     * `deleteOutDir`, a stale .tsbuildinfo makes tsc believe unchanged files
+     * are already emitted while dist has just been wiped — producing a
+     * silently PARTIAL build. Correctness over a marginal speed win.
+     */
+    "incremental": false,
+
+    /* Path alias `$/` -> `src/`. Declared via `paths` alone; `baseUrl` is
+     * deliberately absent so bare `src/...` imports cannot resolve.
+     */
+    "paths": {
+      "$/*": ["./src/*"]
+    },
+
+    /* Type safety. Full strict mode. */
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
